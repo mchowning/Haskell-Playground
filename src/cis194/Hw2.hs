@@ -7,13 +7,10 @@ import Test.HUnit
 --- Exercise 1
 
 parseMessage :: String -> LogMessage
-parseMessage s = parseHelper $ words s
-  where
-    parseHelper :: [String] -> LogMessage
-    parseHelper ("E":i:t:m) = LogMessage (Error (read i)) (read t) (unwords m)
-    parseHelper ("I":t:m)   = LogMessage Info (read t) (unwords m)
-    parseHelper ("W":t:m)   = LogMessage Warning (read t) (unwords m)
-    parseHelper _           = Unknown s
+parseMessage s = case words s of ("E":i:t:m) -> LogMessage (Error (read i)) (read t) (unwords m)
+                                 ("I":t:m)   -> LogMessage Info (read t) (unwords m)
+                                 ("W":t:m)   -> LogMessage Warning (read t) (unwords m)
+                                 _           -> Unknown s
 
 parse :: String -> [LogMessage]
 parse = map parseMessage . lines
