@@ -65,13 +65,14 @@ runBuildTests = runTestTT allTests
     baseTest (input, expected) = expected ~=? build input
     testCases :: [ ([LogMessage], MessageTree) ]
     testCases =  [ ([lmg 1],
-                    Node Leaf (lmg 1) Leaf),                                              -- 1 element
-                   ([lmg 1, lmg 3, lmg 2],
-                    Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf)),      -- 3 elements, evenly split
-                   ([lmg 1, lmg 2, lmg 3],
-                    Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf),      -- 3 elements, all left side
-                   ([lmg 1, lmg 3, lmg 2],
+                    Node Leaf (lmg 1) Leaf)                                               -- 1 element
+                 , ([lmg 1, lmg 3, lmg 2],
+                    Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf))       -- 3 elements, evenly split
+                 , ([lmg 1, lmg 2, lmg 3],
+                    Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf)       -- 3 elements, all left side
+                 , ([lmg 1, lmg 3, lmg 2],
                     Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf)) ]     -- 3 elements, all right side
+
 
 --- Exercise 4
 
@@ -82,16 +83,47 @@ inOrder (Node lt m rt) = inOrder lt ++ [m] ++ inOrder rt
 runInOrderTests :: IO Counts
 runInOrderTests = runTestTT allTests
   where
-    allTests :: Test
     allTests = TestList $ map baseTest testCases
     baseTest (input, expected) = expected ~=? inOrder input
     testCases :: [ (MessageTree, [LogMessage]) ]
-    testCases =  [
-                   (Node Leaf (lmg 1) Leaf,                                              -- 1 element
-                    [lmg 1]),
-                   (Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf),      -- 3 elements, evenly split
-                    [lmg 1, lmg 2, lmg 3]),
-                   (Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf,      -- 3 elements, all left side
-                    [lmg 1, lmg 2, lmg 3]),
-                   (Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf),      -- 3 elements, all right side
+    testCases =  [ (Node Leaf (lmg 1) Leaf,                                              -- 1 element
+                   [lmg 1])
+                 , (Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf),      -- 3 elements, evenly split
+                   [lmg 1, lmg 2, lmg 3])
+                 , (Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf,      -- 3 elements, all left side
+                   [lmg 1, lmg 2, lmg 3])
+                 , (Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf),      -- 3 elements, all right side
                    [lmg 1, lmg 2, lmg 3]) ]
+
+
+--- Exercise 5
+
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong = map messageGetter . filter onlySevereErrors . inOrder . build
+  where
+    onlySevereErrors :: LogMessage -> Bool
+    onlySevereErrors (LogMessage (Error n) _ _) | n >= 50   = True
+                                                | otherwise = False
+    onlySevereErrors _                          = False
+
+    messageGetter :: LogMessage -> String
+    messageGetter (LogMessage _ _ m) = m
+    messageGetter _                  = undefined
+
+runWhatWentWrongTests :: IO Counts
+runWhatWentWrongTests = runTestTT allTests
+  where
+    allTests = TestList $ map baseTest testCases
+    baseTest (input, expected) = expected ~=? whatWentWrong input
+    testCases :: [([LogMessage], [String])]
+    testCases = [ ([LogMessage (Error 51) 1000 "error > 50"], ["error > 50"])
+                , ([LogMessage (Error 49) 1000 "error < 50"], [])
+                , ([LogMessage Info 1000 "info message"], [])
+                ]
+
+runWhatWentWrongTestSample :: IO Counts
+runWhatWentWrongTestSample = do
+                               strs <- testWhatWentWrong parse whatWentWrong "hw2-sample.log"
+                               runTestTT (strs ~?= [ "Way too many pickles"
+                                                 , "Bad pickle-flange interaction detected"
+                                                 , "Flange failed!" ])
