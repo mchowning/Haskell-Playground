@@ -19,7 +19,7 @@ runParseMessageTests :: IO Counts
 runParseMessageTests = runTestTT allTests
   where
     allTests = TestList $ map baseTest testCases
-    baseTest (input, result) = TestCase $ assertEqual "" result (parseMessage input)
+    baseTest (input, expected) = expected ~=? parseMessage input
     testCases = [ ("I 6 Completed armadillo processing", LogMessage Info 6 "Completed armadillo processing")
                 , ("W 5 Flange is due for a check-up",   LogMessage Warning 5 "Flange is due for a check-up")
                 , ("E 20 2 Too many pickles",            LogMessage (Error 20) 2 "Too many pickles")
@@ -29,30 +29,46 @@ runParseMessageTests = runTestTT allTests
 --- Exercise 2
 
 insert :: LogMessage -> MessageTree -> MessageTree
-insert (Unknown _) tree                                         = tree
-insert lm Leaf                                                  = Node Leaf lm Leaf
-insert lm@(LogMessage _ ts _) (Node lt (LogMessage _ tts _) rt) | ts <= tts = insert lm lt
-                                                                | ts > tts  = insert lm rt
-insert _ _                                                      = undefined
+insert (Unknown _) tree                                                     = tree
+insert lm Leaf                                                              = Node Leaf lm Leaf
+insert lm@(LogMessage _ ts _) (Node left nodeLm@(LogMessage _ tts _) right) | ts <= tts = Node (insert lm left) nodeLm right
+                                                                            | ts > tts  = Node left nodeLm (insert lm right)
+insert _ _                                                                  = undefined
 
--- runInsertTests = runTestTT insertTests
---   where
---     insertTests = TestList $ map baseTest testCases
---     baseTest (input1, input2) result = TestCase $ assertEquals "" result (insert input1 input2)
---     testCases = [ (LogMessage]
+runInsertTests :: IO Counts
+runInsertTests = runTestTT allTests
+  where
+    allTests :: Test
+    allTests = TestList $ map baseTest testCases
+    baseTest (input, expected) = expected ~=? uncurry insert input
+    testCases = [ ((lmg 10, Leaf)         , bottomNode 10)                              -- Leaf insert
+                , ((lmg 15, bottomNode 10), Node Leaf (lmg 10) (bottomNode 15))         -- Right insert
+                , ((lmg 5, bottomNode 10) , Node (bottomNode 5) (lmg 10) Leaf) ]        -- Left insert
 
+    bottomNode :: Int -> MessageTree
+    bottomNode n = Node Leaf (lmg n) Leaf
 
 lmg :: Int -> LogMessage
 lmg n = LogMessage Info n ""
 
-sampleTree :: MessageTree
-sampleTree = Node
-              (Node
-                Leaf
-                (lmg 10)
-                Leaf)
-              (lmg 20)
-              (Node
-                Leaf
-                (lmg 30)
-                Leaf)
+
+--- Exercise 3
+
+build :: [LogMessage] -> MessageTree
+build = foldr insert Leaf
+
+runBuildTests :: IO Counts
+runBuildTests = runTestTT allTests
+  where
+    allTests :: Test
+    allTests = TestList $ map baseTest testCases
+    baseTest (input, expected) = expected ~=? build input
+    testCases :: [ ([LogMessage], MessageTree) ]
+    testCases =  [ ([lmg 1],
+                    Node Leaf (lmg 1) Leaf),                                              -- 1 element
+                   ([lmg 1, lmg 3, lmg 2],
+                    Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf)),      -- 3 elements, evenly split
+                   ([lmg 1, lmg 2, lmg 3],
+                    Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf),      -- 3 elements, all left side
+                   ([lmg 1, lmg 3, lmg 2],
+                    Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf)) ]     -- 3 elements, all right side
