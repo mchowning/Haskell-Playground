@@ -72,3 +72,26 @@ runBuildTests = runTestTT allTests
                     Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf),      -- 3 elements, all left side
                    ([lmg 1, lmg 3, lmg 2],
                     Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf)) ]     -- 3 elements, all right side
+
+--- Exercise 4
+
+inOrder :: MessageTree -> [LogMessage]
+inOrder Leaf = []
+inOrder (Node lt m rt) = inOrder lt ++ [m] ++ inOrder rt
+
+runInOrderTests :: IO Counts
+runInOrderTests = runTestTT allTests
+  where
+    allTests :: Test
+    allTests = TestList $ map baseTest testCases
+    baseTest (input, expected) = expected ~=? inOrder input
+    testCases :: [ (MessageTree, [LogMessage]) ]
+    testCases =  [
+                   (Node Leaf (lmg 1) Leaf,                                              -- 1 element
+                    [lmg 1]),
+                   (Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf),      -- 3 elements, evenly split
+                    [lmg 1, lmg 2, lmg 3]),
+                   (Node (Node (Node Leaf (lmg 1) Leaf) (lmg 2) Leaf) (lmg 3) Leaf,      -- 3 elements, all left side
+                    [lmg 1, lmg 2, lmg 3]),
+                   (Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf),      -- 3 elements, all right side
+                   [lmg 1, lmg 2, lmg 3]) ]
