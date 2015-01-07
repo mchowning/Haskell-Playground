@@ -6,17 +6,12 @@ import Test.HUnit
 
 --- Exercise 1
 
--- TODO
-
 skips :: [a] -> [[a]]
 skips [] = [[]]
-skips ls = map (skipper ls) [1..(length ls)]
+skips ls = reverse (foldl' (skipper ls) [] [1..(length ls)])
   where
-    skipper xs n = last . transpose . filter ((== n) . length) . chunksOf n $ xs -- Bad form to use last???
---     skipper :: [a] -> Int -> [a]
---     skipper xs n = case reverse . transpose . filter ((== n) . length) . chunksOf n $ xs of (x:_) -> x
---                                                                                             _ -> []
-
+    skipper :: [a] -> [[a]] -> Int -> [[a]]
+    skipper xs acc n = (last . transpose . chunksOf n $ xs) : acc
 
 runSkipsTests :: IO Counts
 runSkipsTests = runTestTT allTests
@@ -37,7 +32,7 @@ localMaxima = foldr addIfMaxima [] . tails
  where
    addIfMaxima :: (Ord a) => [a] -> [a] -> [a]
    addIfMaxima (before:n:after:_) acc | n > before && n > after = n:acc
-   addIfMaxima _ acc = acc
+   addIfMaxima _                  acc = acc
 
 runLocalMaximaTests :: IO Counts
 runLocalMaximaTests = runTestTT allTests
