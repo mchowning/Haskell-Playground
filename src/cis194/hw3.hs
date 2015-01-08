@@ -26,8 +26,7 @@ runSkipsTests = runTestTT allTests
 
 --- Exercise 2
 
--- todo switch to integers
-localMaxima :: [Int] -> [Int]
+localMaxima :: [Integer] -> [Integer]
 localMaxima = foldr addIfMaxima [] . tails
  where
    addIfMaxima :: (Ord a) => [a] -> [a] -> [a]
