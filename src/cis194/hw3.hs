@@ -47,40 +47,40 @@ runLocalMaximaTests = runTestTT allTests
 
 --- Exercise 3
 
--- todo - figure out how to make this shorter
-
 histogram :: [Integer] -> String
-histogram ils = unlines $ (plotHistogram . listCounter $ ils) ++ getBaseLines
+histogram = unlines . addBaseline . plotHistogram . countNumbers
+
   where
-    -- ==========
-    -- 0123456789
-    getBaseLines :: [String]
-    getBaseLines = [replicate 10 '=', ['0'..'9']]
 
     {- Takes a list with Integers between 0 and 9 and returns a 0 indexed 10-element list of
-       integers that indicates the count of the numbers equal to each index -}
-    listCounter :: [Integer] -> [Int]
-    listCounter ls = foldr (counter ls) [] [0..9]
+       integers that indicates the count of the numbers equal to each index, i.e., if there
+        were 2 zero's then the number 2 would be at the 0-index -}
+    countNumbers :: [Integer] -> [Int]
+    countNumbers ls = map (numberCounter ls) [0..9]
       where
-        {- Appends to the accumulator the number of times the specified integer occurs in
-           the specified list -}
-        counter :: [Integer] -> Integer -> [Int] -> [Int]
-        counter testLs i acc = (length . filter (== i) $ testLs) : acc
+      {- Determine how many times a given number occurs in a list -}
+        numberCounter :: [Integer] -> Integer -> Int
+        numberCounter ns n = length (filter (==n) ns)
 
     plotHistogram :: [Int] -> [String]
-    plotHistogram = reverse . transpose . convertToAsterisks
+    plotHistogram = orientVertically . convertListToAsterisks
       where
-        {- Takes a list of numbers and, in a list, for each number creates a string with the
-           number of asterisks equal to the provided number, plus any spaces needed to make
-           the String equal to the longest string returned by this function -}
-        convertToAsterisks :: [Int] -> [String]
-        convertToAsterisks tls = foldr (myReplicate (maximum tls)) [] tls
+        convertListToAsterisks :: [Int] -> [String]
+        convertListToAsterisks ls = map (withSpaceIncreaseSizeTo (maximum ls) . createRowOfAsterisks) ls
+          where
+            createRowOfAsterisks :: Int -> String
+            createRowOfAsterisks nAsterisks = replicate nAsterisks '*'
 
-        {- Takes (fullStringSize) (numberOfAsterisks) (accumulatorList) and appends to the
-           accumulator list a string that starts with the specified number of asterisks,
-           plus any spaces needed to make the string length equal to the full string size -}
-        myReplicate :: Int -> Int -> [String] -> [String]
-        myReplicate limit n acc = (replicate (fromIntegral n) '*' ++ replicate (fromIntegral (limit - n)) ' ')  : acc
+            withSpaceIncreaseSizeTo :: Int -> String -> String
+            withSpaceIncreaseSizeTo l str = str ++ replicate (l - length str) ' '
+
+        orientVertically :: [String] -> [String]
+        orientVertically = reverse . transpose
+
+    {- ==========
+       0123456789 -}
+    addBaseline :: [String] -> [String]
+    addBaseline ls = ls ++ [replicate 10 '=', ['0'..'9']]
 
 
 runHistogramTest :: IO Counts
@@ -89,10 +89,7 @@ runHistogramTest = runTestTT histogramTest
     histogramTest :: Test
     histogramTest = TestList [ histogram h1Input ~?= h1Result
                              , histogram []      ~?= emptyResult ]
-
+    h1Input  = [1,4,5,4,6,6,3,4,2,4,9]
     h1Result = "    *     \n    *     \n    * *   \n ******  *\n==========\n0123456789\n"
 
     emptyResult = "==========\n0123456789\n"
-
-h1Input :: [Integer]
-h1Input  = [1,4,5,4,6,6,3,4,2,4,9]
