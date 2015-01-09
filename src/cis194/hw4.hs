@@ -1,6 +1,7 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
 import Test.QuickCheck
+import Test.HUnit
 
 --- Exercise 1
 
@@ -33,3 +34,53 @@ prop_fun2 :: Integer -> Property
 prop_fun2 a = a > 0 ==> fun2 a == fun2' a
 
 
+--- Exercise 2
+
+data Tree a = Leaf
+              | Node Integer (Tree a) a (Tree a)
+  deriving (Show, Eq)
+
+-- todo must be a better way
+
+foldTree :: [a] -> Tree a
+foldTree [] = Leaf
+foldTree [x] = Node 0 Leaf x Leaf
+foldTree (x:xs) = let (l,r) = splitAt (length xs `div` 2) xs
+                      left = foldTree l
+                      right = foldTree r
+                      depth = fromIntegral (maximum [getDepth left, getDepth right])
+                  in Node depth left x right
+
+
+-- Testing stuff --
+
+isBalanced :: Tree a -> Bool
+isBalanced Leaf = True
+isBalanced (Node _ l _ r) = abs (getDepth l - getDepth r) <= 1
+
+isBalancedTests :: Test
+isBalancedTests =
+  TestList [ isBalanced Leaf                                ~?= True
+           , isBalanced anEmptyNode                         ~?= True
+           , isBalanced (Node 0 anEmptyNode "" Leaf)        ~?= True
+           , isBalanced (Node 0 Leaf "" anEmptyNode)        ~?= True
+           , isBalanced (Node 0 anEmptyNode "" anEmptyNode) ~?= True
+           , isBalanced (Node 0 Leaf "" (Node 0 Leaf "" anEmptyNode)) ~?= False
+           , isBalanced (Node 0 Leaf "" (Node 0 anEmptyNode "" (Node 0 Leaf "" anEmptyNode))) ~?= False ]
+    where anEmptyNode = Node 0 Leaf "" Leaf
+
+getDepth :: Tree a -> Int
+getDepth Leaf = 0
+getDepth (Node _ l _ r) = 1 + maximum [getDepth l, getDepth r]
+
+getDepthTests :: Test
+getDepthTests =
+  TestList [ getDepth Leaf ~?= 0
+           , getDepth anEmptyNode ~?= 1
+           , getDepth (Node 0 Leaf "" anEmptyNode) ~?= 2
+           , getDepth (Node 0 Leaf "" (Node 0 Leaf "" anEmptyNode)) ~?= 3
+           , getDepth (Node 0 Leaf "" (Node 0 Leaf "" (Node 0 Leaf "" anEmptyNode))) ~?= 4 ]
+    where anEmptyNode = Node 0 Leaf "" Leaf
+
+prop_foldTreeBalanced :: String -> Bool
+prop_foldTreeBalanced = isBalanced . foldTree
