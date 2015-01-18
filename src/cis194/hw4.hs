@@ -1,6 +1,7 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
 import Data.Char
+import Data.List
 import Test.QuickCheck
 import Test.HUnit
 
@@ -129,6 +130,24 @@ prop_mapStr s = map toUpper s == map' toUpper s
 
 
 --- Exercise 4
+
+-- sieveSundaram :: Integer -> [Integer]
+sieveSundaram :: Integer -> [Integer]
+sieveSundaram n = filter (<n) . map sieveGenerator . foldr delete [1..n] .  nub . filter (<n). map sieveFinder . allPossibleCombinations $ n
+  where
+    sieveGenerator :: Integer -> Integer
+    sieveGenerator x = (2 * x) + 1
+
+    
+
+    sieveFinder :: (Integer, Integer) -> Integer
+    sieveFinder (x, y) = x + y + (2*x*y)
+
+    allPossibleCombinations :: Integer -> [(Integer, Integer)]
+    allPossibleCombinations a = [(x,y) | x <- [1..a], y <- [1..a]]
+
+sieveSundaramTests :: Test
+sieveSundaramTests = sieveSundaram 100 ~?= [3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
 
 
 
