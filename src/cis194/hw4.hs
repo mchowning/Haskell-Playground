@@ -1,5 +1,6 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
+import Data.Char
 import Test.QuickCheck
 import Test.HUnit
 
@@ -84,3 +85,50 @@ getDepthTests =
 
 prop_foldTreeBalanced :: String -> Bool
 prop_foldTreeBalanced = isBalanced . foldTree
+
+
+--- Exercise 3.1
+
+xor :: [Bool] -> Bool
+xor = foldr helper False
+  where
+    helper :: Bool -> Bool -> Bool
+    helper b acc | b         = not acc
+                 | otherwise = acc
+
+xorTests :: Test
+xorTests =
+  TestList [ xor []                   ~?= False
+           , xor [True]               ~?= True
+           , xor [False]              ~?= False
+           , xor [True, True]         ~?= False
+           , xor [True, False]        ~?= True
+           , xor [False, True]        ~?= True
+           , xor [True, True, True]   ~?= True
+           , xor [True, True, False]  ~?= False
+           , xor [False, False, True] ~?= True
+           ]
+
+
+--- Exercise 3.2
+
+map' :: (a -> b) -> [a] -> [b]
+map' f = foldr (\x acc -> f x : acc) []
+
+prop_mapInt :: [Int] -> Bool
+prop_mapInt x = map (*3) x == map' (*3) x
+
+prop_mapStr :: String -> Bool
+prop_mapStr s = map toUpper s == map' toUpper s
+
+
+--- Exercise 3.3
+
+
+-- just use reverse on the list and flip on the function parameter?
+
+
+--- Exercise 4
+
+
+
