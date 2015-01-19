@@ -1,18 +1,21 @@
 -- {-#OPTIONS_GHC -Wall -Werror #-}
+-- {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-import Hw5ExprT
+import qualified Hw5ExprT as H
 import Hw5Parser
+import Hw5StackVM
 import Test.HUnit
 
 --- Exercise 1
 
-eval :: ExprT -> Integer
-eval (Lit n) = n
-eval (Add e1 e2) = eval e1 + eval e2
-eval (Mul e1 e2) = eval e1 * eval e2
+eval :: H.ExprT -> Integer
+eval (H.Lit n) = n
+eval (H.Add e1 e2) = eval e1 + eval e2
+eval (H.Mul e1 e2) = eval e1 * eval e2
 
 evalTest :: Test
-evalTest = eval (Mul (Add (Lit 2) (Lit 3)) (Lit 4)) ~?= 20
+evalTest = eval (H.Mul (H.Add (H.Lit 2) (H.Lit 3)) (H.Lit 4)) ~?= 20
 
 
 --- Exercise 2
@@ -21,8 +24,8 @@ evalStr :: String -> Maybe Integer
 evalStr s = case myParse s of Nothing  -> Nothing
                               Just a   -> Just (eval a)
   where
-    myParse :: String -> Maybe ExprT
-    myParse = parseExp Lit Add Mul
+    myParse :: String -> Maybe H.ExprT
+    myParse = parseExp H.Lit H.Add H.Mul
 
 evalStrTest :: Test
 evalStrTest = TestList [ evalStr "(2*)3+4" ~?= Nothing
@@ -38,13 +41,13 @@ class Expr a where
   add :: a -> a -> a
   mul :: a -> a -> a
 
-instance Expr ExprT where
-  lit = Lit
-  add = Add
-  mul = Mul
+instance Expr H.ExprT where
+  lit = H.Lit
+  add = H.Add
+  mul = H.Mul
 
 exprClassTest :: Test
-exprClassTest = (mul (add (lit 2) (lit 3)) (lit 4) :: ExprT) ~?= Mul (Add (Lit 2) (Lit 3)) (Lit 4)
+exprClassTest = (mul (add (lit 2) (lit 3)) (lit 4) :: H.ExprT) ~?= H.Mul (H.Add (H.Lit 2) (H.Lit 3)) (H.Lit 4)
 
 
 --- Exercise 4
@@ -81,3 +84,14 @@ instanceTests = TestList [ (testExp :: Maybe Integer) ~?= Just (-7)
                          , (testExp :: Maybe MinMax)  ~?= Just (MinMax 5)
                          , (testExp :: Maybe Mod7)    ~?= Just (Mod7 0)
                          ]
+
+
+--- Exercise 5
+
+instance Expr Program where
+  lit a = [PushI a]
+  add a b = a ++ b ++ [Add]
+  mul a b = a ++ b ++ [Mul]
+
+compile :: String -> Maybe Program
+compile = parseExp lit add mul
