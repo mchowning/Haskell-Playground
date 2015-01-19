@@ -31,3 +31,17 @@ evalStrTest = TestList [ evalStr "(2*)3+4" ~?= Nothing
                        ]
 
 
+--- Exercise 3
+
+class Expr a where
+  lit :: Integer -> a
+  add :: a -> a -> a
+  mul :: a -> a -> a
+
+instance Expr ExprT where
+  lit = Lit
+  add = Add
+  mul = Mul
+
+exprClassTest :: Test
+exprClassTest = (mul (add (lit 2) (lit 3)) (lit 4) :: ExprT) ~?= Mul (Add (Lit 2) (Lit 3)) (Lit 4)
