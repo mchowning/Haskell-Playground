@@ -1,11 +1,14 @@
--- {-#OPTIONS_GHC -Wall -Werror #-}
--- {-# LANGUAGE TypeSynonymInstances #-}
+{-#OPTIONS_GHC -Wall -Werror #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
 import qualified Hw5ExprT as H
+import qualified Data.Map as M
+import Data.Functor
+import Control.Applicative
 import Hw5Parser
 import Hw5StackVM
 import Test.HUnit
+
 
 --- Exercise 1
 
@@ -79,6 +82,7 @@ instance Expr Mod7 where
 testExp :: Expr a => Maybe a
 testExp = parseExp lit add mul "(3 * -4) + 5"
 
+instanceTests :: Test
 instanceTests = TestList [ (testExp :: Maybe Integer) ~?= Just (-7)
                          , (testExp :: Maybe Bool)    ~?= Just True
                          , (testExp :: Maybe MinMax)  ~?= Just (MinMax 5)
@@ -95,3 +99,42 @@ instance Expr Program where
 
 compile :: String -> Maybe Program
 compile = parseExp lit add mul
+
+
+--- Exercise 6
+
+class HasVars a where
+  var :: String -> a
+
+data VarExprT = Vlit Integer
+              | Vadd VarExprT VarExprT
+              | Vmul VarExprT VarExprT
+              | Vvar String
+  deriving (Show)
+
+-- instance Show VarExprT where
+--   show (Vlit a) = show a
+
+instance Expr VarExprT where
+  lit = Vlit
+  add = Vadd
+  mul =  Vmul
+
+instance HasVars VarExprT where
+  var = Vvar
+
+instance HasVars (M.Map String Integer -> Maybe Integer) where
+   var = M.lookup
+
+instance Expr (M.Map String Integer -> Maybe Integer) where
+  lit = const . Just
+  add e1 e2 m = (+) <$> e1 m <*> e2 m
+  mul e1 e2 m = (*) <$> e1 m <*> e2 m
+
+
+withVars :: [(String, Integer)]
+         -> (M.Map String Integer -> Maybe Integer)
+         -> Maybe Integer
+withVars vs expr = expr $ M.fromList vs
+
+
