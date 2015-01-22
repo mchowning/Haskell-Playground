@@ -1,6 +1,5 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
-
 --- Exercise 1
 
 -- basic fibonacci number calculator
@@ -41,3 +40,15 @@ streamMap f (Cons a s) = Cons (f a) (streamMap f s)
 
 streamFromSeed :: (a -> a) -> a -> Stream a
 streamFromSeed f a = Cons a (streamFromSeed f (f a))
+
+
+--- Exercise 5
+
+nats :: Stream Integer
+nats = streamFromSeed (+1) 1
+
+interleaveStreams :: Stream a -> Stream a -> Stream a
+interleaveStreams (Cons a1 s1) s2 = Cons a1 (interleaveStreams s2 s1)
+
+ruler :: Stream Integer
+ruler = foldr1 interleaveStreams (map streamRepeat [1..])
