@@ -53,15 +53,33 @@ unimodalMaxTests = TestList
 
 --- 3
 
--- fixme: inefficient but working solution
-
 indexMatch :: [Int] -> Bool
-indexMatch ls = foldr (\(x,y) acc -> acc || x == y) False (zip [0..] ls)
+indexMatch = indexMatchHelper 0
+  where
+    indexMatchHelper :: Int -> [Int] -> Bool
+    indexMatchHelper _ [] = False
+    indexMatchHelper startIndex [a] = startIndex == a
+    indexMatchHelper startIndex ls  =
+      case head rightHalf of
+        x | x == rightHalfIndex -> True
+          | x > rightHalfIndex  -> indexMatchHelper startIndex leftHalf
+          | otherwise           -> indexMatchHelper rightHalfIndex rightHalf
+      where
+        (leftHalf, rightHalf) = splitAt (length ls `div` 2) ls
+        rightHalfIndex = length leftHalf + startIndex
+
+-- inefficient but simple, functional solution
+-- indexMatch :: [Int] -> Bool
+-- indexMatch ls = foldr (\(x,y) acc -> acc || x == y) False (zip [0..] ls)
 
 indexMatchTests :: Test
 indexMatchTests = TestList
   [ indexMatch [0] ~?= True
   , indexMatch [1] ~?= False
   , indexMatch [-1] ~?= False
+  , indexMatch [-1,1] ~?= True
+  , indexMatch [0,1] ~?= True
   , indexMatch [-1..6] ~?= False
-  , indexMatch ([-1..5] ++ [7]) ~?= True ]
+  , indexMatch ([-1..5] ++ [7]) ~?= True
+  , indexMatch ([-1,1] ++ [2..100]) ~?= True
+  ]
