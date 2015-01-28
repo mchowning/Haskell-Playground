@@ -1,10 +1,13 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
 import Test.HUnit
+-- import Data.List
+-- import qualified Data.Set as Set
+-- import Data.Maybe
 
 {-
 1. You are given as input an unsorted array of n distinct numbers, where n is a power of 2. Give an algorithm that
-identifies the second-largest number in the array, and that uses at most n+log2n−2 comparisons.
+identifies the second-largest number in the array, and that uses at most n+log2(n)-2 comparisons.
 
 2. You are a given a unimodal array of n distinct elements, meaning that its entries are in increasing order up until
 its maximum element, after which its elements are in decreasing order. Give an algorithm to compute the maximum element
@@ -28,6 +31,42 @@ you the desired upper bound.)
 
 --- 1
 
+secondLargestTests :: Test
+secondLargestTests = TestList
+  [ secondLargest [] ~?= Nothing
+  , secondLargest [1] ~?= Nothing
+  , secondLargest [1,2] ~?= Just 1
+  , secondLargest [2,1] ~?= Just 1
+  , secondLargest [50..99] ~?= Just 98
+  , secondLargest [1,3,9,8,2,5] ~?= Just 8 ]
+
+-- simple, functional, possibly inefficient implementation
+secondLargest :: [Int] -> Maybe Int
+secondLargest [] = Nothing
+secondLargest [_] = Nothing
+secondLargest ls = Just (last . take 2 . sortBy (flip compare) . dropDuplicates $ ls)
+  where
+    dropDuplicates :: [Int] -> [Int]
+    dropDuplicates = Set.toList . Set.fromList
+
+-- approach with variation on merge sort
+-- secondLargest :: [Int] -> Maybe Int
+-- secondLargest ls | length ls < 2 = Nothing
+--                  | otherwise     = Just (head . getLast2 $ ls)
+--   where
+--     getLast2 :: (Ord a) => [a] -> [a]
+--     getLast2 [] = []
+--     getLast2 [a] = [a]
+--     getLast2 a = let (firstHalf, lastHalf) = splitAt (length a `div` 2) a
+--                  in dropAllButLast2 . sortAsMerging $ (getLast2 firstHalf, getLast2 lastHalf)
+--
+--     sortAsMerging :: (Ord b) => ([b],[b]) -> [b]
+--     sortAsMerging ([], b) = b
+--     sortAsMerging (b, []) = b
+--     sortAsMerging (axs@(x:xs), ays@(y:ys)) | x < y     = x : sortAsMerging (xs,ays)
+--                                            | otherwise = y : sortAsMerging (axs, ys)
+--     dropAllButLast2 :: [a] -> [a]
+--     dropAllButLast2 ms = drop (length ms - 2) ms
 
 
 --- 2
@@ -68,7 +107,7 @@ indexMatch = indexMatchHelper 0
         (leftHalf, rightHalf) = splitAt (length ls `div` 2) ls
         rightHalfIndex = length leftHalf + startIndex
 
--- inefficient but simple, functional solution
+-- simple, functional, possibly less efficient solution
 -- indexMatch :: [Int] -> Bool
 -- indexMatch ls = foldr (\(x,y) acc -> acc || x == y) False (zip [0..] ls)
 
