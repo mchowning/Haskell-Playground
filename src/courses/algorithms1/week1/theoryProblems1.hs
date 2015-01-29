@@ -41,32 +41,30 @@ secondLargestTests = TestList
   , secondLargest [1,3,9,8,2,5] ~?= Just 8 ]
 
 -- simple, functional, possibly inefficient implementation
-secondLargest :: [Int] -> Maybe Int
-secondLargest [] = Nothing
-secondLargest [_] = Nothing
-secondLargest ls = Just (last . take 2 . sortBy (flip compare) . dropDuplicates $ ls)
-  where
-    dropDuplicates :: [Int] -> [Int]
-    dropDuplicates = Set.toList . Set.fromList
+-- secondLargest :: [Int] -> Maybe Int
+-- secondLargest [] = Nothing
+-- secondLargest [_] = Nothing
+-- secondLargest ls = Just (last . take 2 . sortBy (flip compare) . dropDuplicates $ ls)
+--   where
+--     dropDuplicates :: [Int] -> [Int]
+--     dropDuplicates = Set.toList . Set.fromList
 
 -- approach with variation on merge sort
--- secondLargest :: [Int] -> Maybe Int
--- secondLargest ls | length ls < 2 = Nothing
---                  | otherwise     = Just (head . getLast2 $ ls)
---   where
---     getLast2 :: (Ord a) => [a] -> [a]
---     getLast2 [] = []
---     getLast2 [a] = [a]
---     getLast2 a = let (firstHalf, lastHalf) = splitAt (length a `div` 2) a
---                  in dropAllButLast2 . sortAsMerging $ (getLast2 firstHalf, getLast2 lastHalf)
---
---     sortAsMerging :: (Ord b) => ([b],[b]) -> [b]
---     sortAsMerging ([], b) = b
---     sortAsMerging (b, []) = b
---     sortAsMerging (axs@(x:xs), ays@(y:ys)) | x < y     = x : sortAsMerging (xs,ays)
---                                            | otherwise = y : sortAsMerging (axs, ys)
---     dropAllButLast2 :: [a] -> [a]
---     dropAllButLast2 ms = drop (length ms - 2) ms
+secondLargest :: [Int] -> Maybe Int
+secondLargest ls | length ls < 2 = Nothing
+                 | otherwise     = Just (last . get2Largest $ ls)
+  where
+    get2Largest :: (Ord a) => [a] -> [a]
+    get2Largest [] = []
+    get2Largest [a] = [a]
+    get2Largest a = let (firstHalf, lastHalf) = splitAt (length a `div` 2) a
+                 in take 2 . descendingMergeSort $ (get2Largest firstHalf, get2Largest lastHalf)
+
+    descendingMergeSort:: (Ord b) => ([b],[b]) -> [b]
+    descendingMergeSort ([], b) = b
+    descendingMergeSort (b, []) = b
+    descendingMergeSort (axs@(x:xs), ays@(y:ys)) | x > y     = x : descendingMergeSort (xs,ays)
+                                           | otherwise = y : descendingMergeSort (axs, ys)
 
 
 --- 2
@@ -122,3 +120,4 @@ indexMatchTests = TestList
   , indexMatch ([-1..5] ++ [7]) ~?= True
   , indexMatch ([-1,1] ++ [2..100]) ~?= True
   ]
+
