@@ -1,0 +1,21 @@
+hi there
+
+there's an empty line with space below me
+   
+something else
+
+import Wbbb
+import Waaa
+import q
+import aaaa
+
+import
+
+import waaa
+import 2
+
+no more imports
+just regular stuff here
+
+even have an empty line before this
+
