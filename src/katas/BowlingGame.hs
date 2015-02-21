@@ -9,15 +9,14 @@ scoreGame = scoreFrame 0
 scoreFrame :: Int -> [Int] -> Int
 scoreFrame 10 _ = 0
 scoreFrame frame rolls
-  | isStrike  = strikeSpareScore + scoreNextFrame (drop 1 rolls)
-  | isSpare   = strikeSpareScore + scoreNextFrame (drop 2 rolls)
-  | otherwise = regularScore + scoreNextFrame (drop 2 rolls)
+  | isStrike  = strikeSpareScore + scoreFrame (frame+1) (drop 1 rolls)
+  | isSpare   = strikeSpareScore + scoreFrame (frame+1) (drop 2 rolls)
+  | otherwise = regularScore + scoreFrame (frame+1) (drop 2 rolls)
   where
     isStrike = head rolls == 10
     isSpare = regularScore == 10
     regularScore = sum . take 2 $ rolls
     strikeSpareScore = sum . take 3 $ rolls
-    scoreNextFrame = scoreFrame (frame+1)
 
 scoreGame2 :: [Int] -> Int
 scoreGame2 = fst . (!!10) . iterate scoreFrame2 . (,) 0
