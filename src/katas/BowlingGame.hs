@@ -23,14 +23,14 @@ scoreGame2 = fst . (!!10) . iterate scoreFrame2 . (,) 0
 
 scoreFrame2 :: (Int, [Int]) -> (Int, [Int])
 scoreFrame2 (total,rolls)
-  | isStrike  = (total + strikeOrSpareScore, drop 1 rolls)
-  | isSpare   = (total + strikeOrSpareScore, drop 2 rolls)
+  | isStrike  = (total + strikeSpareScore, drop 1 rolls)
+  | isSpare   = (total + strikeSpareScore, drop 2 rolls)
   | otherwise = (total + regularScore, drop 2 rolls)
   where
     isStrike = head rolls == 10
     isSpare = regularScore == 10
     regularScore = sum . take 2 $ rolls
-    strikeOrSpareScore = sum . take 3 $ rolls
+    strikeSpareScore = sum . take 3 $ rolls
 
 tests :: IO Counts
 tests = runTestTT (TestList [
