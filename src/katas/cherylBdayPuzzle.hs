@@ -51,8 +51,10 @@ tests1 = [
         ]
 
 -- ################
--- #2
+-- #3
 -- ################
+
+-- Albert: I don't know when Cheryl's birthday is, but I know that Bernard does not know too.
 
 -- Remove all months that have a unique date
   -- find all unique "days" of the month
@@ -60,28 +62,44 @@ tests1 = [
   -- remove any dates with a month matching those "days" (i.e., remove any month that has a possible birthday on 18 or 19)
 
 
-filterFor2 :: [Date]
-filterFor2 = let allMonths = nub . map month $ dates
-                 monthsWithoutUniqueDays = filter (\m -> any (\d -> hasMonthWithDay m d dates) getUniqueDays) allMonths
-                 datesWithoutUniqueDays = filter (\d -> month d `elem` monthsWithoutUniqueDays) dates
-             in datesWithoutUniqueDays
+datesWithoutUniqueDays :: [Date]
+datesWithoutUniqueDays = filter (flip elem monthsWithoutUniqueDays . month) dates
 
-hasMonthWithDay :: Month -> Day -> [Date] -> Bool
-hasMonthWithDay m d = any (flip dateHasDay d) . flip onlyKeepMonth m
+allMonths :: [Month]
+allMonths = nub. map month $ dates
 
-getUniqueDays :: [Day]
-getUniqueDays = map day $ filter (flip isUniqueDay dates . day) dates
+monthsWithoutUniqueDays :: [Month]
+monthsWithoutUniqueDays = filter (not . flip elem monthsWithUniqueDays) allMonths
+
+monthsWithUniqueDays :: [Month]
+monthsWithUniqueDays = filter (flip (hasMonthWithOneOfDays dates) allUniqueDays) allMonths
+
+hasMonthWithOneOfDays :: [Date] -> Month -> [Day] -> Bool
+hasMonthWithOneOfDays mds m = any (hasDateWithMonthAndDay mds m)
+
+hasDateWithMonthAndDay :: [Date] -> Month -> Day -> Bool
+hasDateWithMonthAndDay ds m d = Date m d `elem` ds
+-- hasDateWithMonthAndDay ds = (flip elem) ds . Date
+-- FIXME
+
+allUniqueDays :: [Day]
+allUniqueDays = map day $ filter (flip isUniqueDay dates . day) dates
+-- uniqueDays = map day $ filter (isUniqueDay dates . day) dates
 
 isUniqueDay :: Day -> [Date] -> Bool
 isUniqueDay d = (== 1) . length . filter (== d) . map day
-
-dateHasDay :: Date -> Day -> Bool
-dateHasDay = (==) . day
+-- isUniqueDay :: [Date] -> Day -> Bool
+-- isUniqueDay ds d = (== 1) . length . filter (== d . day) ds
 
 tests2 :: [Test]
 tests2 = [
-        "hasMonthWithDay: true" ~: hasMonthWithDay "May" "13" [Date "May" "13"] ~?= True
-        , "hasMonthWithDay: matching day in diff month" ~: hasMonthWithDay "June" "13" [Date "May" "13"] ~?= False
-        , "hasMonthWithDay: matching day in diff day" ~: hasMonthWithDay "May" "14" [Date "May" "13"] ~?= False
+        "hasMonthWithDay: true" ~: hasDateWithMonthAndDay [Date "May" "13"] "May" "13" ~?= True
+        , "hasMonthWithDay: matching day in diff month" ~: hasDateWithMonthAndDay [Date "May" "13"] "June" "13" ~?= False
+        , "hasMonthWithDay: matching day in diff day" ~: hasDateWithMonthAndDay [Date "May" "13"] "May" "14" ~?= False
         ]
 
+-- ########################
+-- #4
+-- ########################
+
+-- Bernard: At first I don't know when Cheryl's birthday is, but I know now.
