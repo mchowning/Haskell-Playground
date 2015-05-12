@@ -1,13 +1,15 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
+-------------------------------------------------------------------------------------------------
+-- Cheryl's birthday puzzle from: http://nbviewer.ipython.org/url/norvig.com/ipython/Cheryl.ipynb
+-------------------------------------------------------------------------------------------------
+
 import Data.List
 import Test.HUnit
 
 type Month = String
 type Day = String
 data Date = Date { month :: Month, day :: Day } deriving (Eq)
--- data Month = Month String deriving Show
--- data Day = Day String deriving Show
 
 instance Show Date where
         show (Date m d) = m ++ ' ':d
@@ -29,12 +31,7 @@ runTests = runTestTT . TestList $
         tests1
         ++ tests2
 
-
--- findAnswer :: [Date]
--- findAnswer = let a = dates
---                  b = dates
---                  c = dates
---              in (nub (map month dates))
+----------------------------------------------------------------------------------------------
 
 onlyKeepMonth :: [Date] -> Month -> [Date]
 onlyKeepMonth ds m = filter ((== m) . month) ds
@@ -50,10 +47,8 @@ tests1 = [
         , "onlyKeepDay 1" ~: onlyKeepDay [Date "May" "13"] "13" ~?= [Date "May" "13"]
         ]
 
--- ################
+---------------------------------------------------------------------------------------------
 -- #3
--- ################
-
 -- Albert: I don't know when Cheryl's birthday is, but I know that Bernard does not know too.
 
 -- Remove all months that have a unique date
@@ -62,8 +57,8 @@ tests1 = [
   -- remove any dates with a month matching those "days" (i.e., remove any month that has a possible birthday on 18 or 19)
 
 
-datesWithoutUniqueDays :: [Date]
-datesWithoutUniqueDays = filter (flip elem monthsWithoutUniqueDays . month) dates
+datesFromMonthsWithoutUniqueDays :: [Date]
+datesFromMonthsWithoutUniqueDays = filter (flip elem monthsWithoutUniqueDays . month) dates
 
 allMonths :: [Month]
 allMonths = nub. map month $ dates
@@ -87,9 +82,9 @@ allUniqueDays = map day $ filter (flip isUniqueDay dates . day) dates
 -- uniqueDays = map day $ filter (isUniqueDay dates . day) dates
 
 isUniqueDay :: Day -> [Date] -> Bool
-isUniqueDay d = (== 1) . length . filter (== d) . map day
+isUniqueDay d = (== 1) . length . filter ((== d) . day)
+-- FIXME why do i have to have the parentheses around the == d?
 -- isUniqueDay :: [Date] -> Day -> Bool
--- isUniqueDay ds d = (== 1) . length . filter (== d . day) ds
 
 tests2 :: [Test]
 tests2 = [
@@ -98,8 +93,25 @@ tests2 = [
         , "hasMonthWithDay: matching day in diff day" ~: hasDateWithMonthAndDay [Date "May" "13"] "May" "14" ~?= False
         ]
 
--- ########################
+---------------------------------------------------------------------------------------------
 -- #4
--- ########################
-
 -- Bernard: At first I don't know when Cheryl's birthday is, but I know now.
+
+-- input is datesFromMonthsWithoutUniqueDays
+
+-- remove any dates that are in both months
+
+datesWithUniqueDays :: [Date]
+datesWithUniqueDays = filter (flip isUniqueDay datesFromMonthsWithoutUniqueDays . day) datesFromMonthsWithoutUniqueDays
+
+---------------------------------------------------------------------------------------------
+-- #5
+-- Albert: Then I also know when Cheryl's birthday is.
+
+-- input is datesWithUniqueDays
+
+result :: [Date]
+result = filter ((== 1) . numberTimesMonthInList . month) datesWithUniqueDays
+
+numberTimesMonthInList :: Month -> Int
+numberTimesMonthInList m = length . filter ((== m) . month) $ datesWithUniqueDays
