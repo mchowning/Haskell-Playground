@@ -20,32 +20,41 @@ toDigits x | x <= 0    = []
            | otherwise = map (fromIntegral . digitToInt) $ show x
 
 toDigitsTests :: [Test]
-toDigitsTests = [ "toDigits 1234"  ~: toDigits 1234  ~?= [1,2,3,4]
-                , "toDigits 0"   ~: toDigits 0     ~?= []
-                , "toDigits -17" ~: toDigits (-17) ~?= []
+toDigitsTests = [ "toDigits 1234"  ~:
+                   toDigits 1234  ~?= [1,2,3,4]
+                , "toDigits 0"   ~:
+                   toDigits 0     ~?= []
+                , "toDigits -17" ~:
+                   toDigits (-17) ~?= []
                 ]
 
 toDigitsRev :: Integer -> [Integer]
 toDigitsRev = reverse . toDigits
 
 toDigitsRevTests :: [Test]
-toDigitsRevTests = [ "toDigitsRev 1234"  ~: toDigitsRev 1234  ~?= [4,3,2,1]
-                   , "toDigitsRev 0"   ~: toDigitsRev 0     ~?= []
-                   , "toDigitsRev -17" ~: toDigitsRev (-17) ~?= []
+toDigitsRevTests = [ "toDigitsRev 1234" ~:
+                      toDigitsRev 1234  ~?= [4,3,2,1]
+                   , "toDigitsRev 0" ~:
+                      toDigitsRev 0     ~?= []
+                   , "toDigitsRev -17" ~:
+                      toDigitsRev (-17) ~?= []
                    ]
 
 ---------------------- Exercise 2 ----------------------
 
-doubleEveryOther :: [Integer] -> [Integer]
-doubleEveryOther = reverse . doubleIfEvenIndex . reverse
+doubleEveryOtherFromRight :: [Integer] -> [Integer]
+doubleEveryOtherFromRight  = reverse . doubleIfEvenIndex . reverse
   where doubleIfEvenIndex :: [Integer] -> [Integer]
-        doubleIfEvenIndex = map (\(a,b) -> if isEven a then 2*b else b) . zip [1,2..]
-          where isEven :: Integer -> Bool
-                isEven x = rem x 2 == 0
+        doubleIfEvenIndex = zipWith ($) (cycle [id,(*2)]) --- !!!
+{-      doubleIfEvenIndex = map (\(a,b) -> if isEven a then 2*b else b) . zip [1,2..]
+        where isEven :: Integer -> Bool
+              isEven x = rem x 2 == 0 -}
 
 doubleEveryOtherTests :: [Test]
-doubleEveryOtherTests = [ "doubleEveryOther [8,7,6,5]" ~: doubleEveryOther [8,7,6,5] ~?= [16,7,12,5]
-                        , "doubleEveryOther [1,2,3]" ~: doubleEveryOther [1,2,3] ~?= [1,4,3]
+doubleEveryOtherTests = [ "doubleEveryOtherFromRight [8,7,6,5]" ~:
+                           doubleEveryOtherFromRight [8,7,6,5] ~?= [16,7,12,5]
+                        , "doubleEveryOtherFromRight [1,2,3]"   ~:
+                           doubleEveryOtherFromRight [1,2,3]   ~?= [1,4,3]
                         ]
 
 ---------------------- Exercise 3 ----------------------
@@ -59,9 +68,13 @@ sumDigitsTests = [ "sumDigits [16,7,12,5]" ~: sumDigits [16,7,12,5] ~?= 22 ]
 ---------------------- Exercise 4 ----------------------
 
 validate :: Integer -> Bool
-validate n = rem (checkSumValue n) 10 == 0
+-- validate = (== 0) . flip rem 10 . sumDigits . doubleEveryOtherFromRight . toDigits
+-- validate = (== 0) . flip rem 10 . checkSumValue
+validate n = checkSumValue n `isDivisibleBy` 10
   where checkSumValue :: Integer -> Integer
-        checkSumValue = sumDigits . doubleEveryOther . toDigits
+        checkSumValue = sumDigits . doubleEveryOtherFromRight . toDigits
+        isDivisibleBy :: Integer -> Integer -> Bool
+        isDivisibleBy x y = rem x y == 0
 
 validateTests :: [Test]
 validateTests = [ "validate 4012888888881881" ~: validate 4012888888881881 ~?= True
