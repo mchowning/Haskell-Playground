@@ -1,7 +1,7 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
-module Hw2 where
+module Hw2_1 where
 
-import Hw2Log
+import Log
 import Test.HUnit
 
 --- Exercise 1
@@ -123,7 +123,7 @@ runWhatWentWrongTests = runTestTT allTests
 
 runWhatWentWrongTestSample :: IO Counts
 runWhatWentWrongTestSample = do
-                               strs <- testWhatWentWrong parse whatWentWrong "hw2-sample.log"
+                               strs <- testWhatWentWrong parse whatWentWrong "sample.log"
                                runTestTT (strs ~?= [ "Way too many pickles"
                                                  , "Bad pickle-flange interaction detected"
                                                  , "Flange failed!" ])
