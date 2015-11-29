@@ -65,4 +65,36 @@ insertTests = [ "insert Unknown" ~:
 
 -------------------- Exercise 3 --------------------
 
+build :: [LogMessage] -> MessageTree
+build = foldr insert Leaf
 
+-------------------- Exercise 4 --------------------
+
+inOrder :: MessageTree -> [LogMessage]
+inOrder Leaf = []
+inOrder (Node left lm right) = inOrder left ++ [lm] ++ inOrder right
+
+
+warnLogMessage :: Int -> LogMessage
+warnLogMessage n = LogMessage Warning n ""
+
+errorLogMessage :: Int -> Int -> LogMessage
+errorLogMessage level time = LogMessage (Error level) time ""
+
+-------------------- Exercise 5 --------------------
+
+whatWentWrong :: [LogMessage] -> [String]
+-- whatWentWrong :: [LogMessage] -> [LogMessage]
+whatWentWrong = map showMessage . inOrder . build . filter (\x -> hasMinErrorLevel 50 x && isError x)
+  where
+    isError :: LogMessage -> Bool
+    isError (LogMessage (Error _) _ _) = True
+    isError _                          = False
+
+    hasMinErrorLevel :: Int -> LogMessage -> Bool
+    hasMinErrorLevel n (LogMessage (Error level) _ _) = n < level
+    hasMinErrorLevel _ _                              = False
+
+    showMessage :: LogMessage -> String
+    showMessage (LogMessage _ _ message) = message
+    showMessage _                        = ""

@@ -1,31 +1,42 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
-module Hw2_1 where
+
+module Hw2_3 where
 
 import Log
 import Data.Maybe
 import Text.Read
 import Test.HUnit
 
+
 --- Exercise 1
 
 
-parseMessage :: String -> LogMessage
-parseMessage s = case words s of
-  ("E":errorLevel:timestamp:message) | isANumber errorLevel && isANumber timestamp
-                                                -> generateErrorLogMessage errorLevel timestamp message
-  ("I":timestamp:message) | isANumber timestamp -> generateLogMessage Info timestamp message
-  ("W":timestamp:message) | isANumber timestamp -> generateLogMessage Warning timestamp message
-  _                                             -> Unknown s
-  where
-    generateErrorLogMessage :: String -> String -> [String] -> LogMessage
-    generateErrorLogMessage el = generateLogMessage (Error $ read el)
-
-    generateLogMessage :: MessageType -> String -> [String] -> LogMessage
-    generateLogMessage mt ts m = LogMessage mt (read ts) (unwords m)
-
-
+-- FIXME fails two tests when dealing with Unknown
 parse :: String -> [LogMessage]
-parse = map parseMessage . lines
+parse str = map parseMessage (lines str)
+
+parseMessage :: String -> LogMessage
+parseMessage = extractLogMessage . extractTimeStamp . extractMessageType . words
+
+
+extractLogMessage :: ([String], Maybe MessageType, Maybe TimeStamp) -> LogMessage
+extractLogMessage (ls, Nothing, _      ) = Unknown (unwords ls)
+extractLogMessage (ls, _      , Nothing) = Unknown (unwords ls)
+extractLogMessage (ls, Just mt, Just ts) = LogMessage mt ts (unwords ls)
+
+
+extractTimeStamp :: ([String], Maybe MessageType)
+                 -> ([String], Maybe MessageType, Maybe TimeStamp)
+extractTimeStamp (x:xs, messageType@(Just _)) | isANumber x = (xs, messageType, Just (read x))
+extractTimeStamp (ls, messageType)                          = (ls, messageType, Nothing)
+
+
+extractMessageType ::  [String] -> ([String], Maybe MessageType)
+extractMessageType ls = case ls of
+  ("I":xs)                 -> (xs, Just Info)
+  ("W":xs)                 -> (xs, Just Warning)
+  ("E":x:xs) | isANumber x -> (xs, Just (Error (read x)))
+  _                        -> (ls, Nothing)
 
 
 isANumber :: String -> Bool
@@ -49,12 +60,15 @@ runParseMessageTests = runTestTT allTests
 
 --- Exercise 2
 
+
 insert :: LogMessage -> MessageTree -> MessageTree
-insert (Unknown _) tree                                                     = tree
-insert lm Leaf                                                              = Node Leaf lm Leaf
-insert lm@(LogMessage _ ts _) (Node left nodeLm@(LogMessage _ tts _) right) | ts <= tts = Node (insert lm left) nodeLm right
-                                                                            | ts > tts  = Node left nodeLm (insert lm right)
-insert _ _                                                                  = undefined
+insert lm Leaf = Node Leaf lm Leaf
+insert (Unknown _) mt = mt
+insert lm@(LogMessage _ ts _) (Node leftMt baseLm@(LogMessage _ baseTs _) rightMt)
+  | ts < baseTs = Node (insert lm leftMt) baseLm rightMt
+  | otherwise   = Node leftMt             baseLm (insert lm rightMt)
+insert _ (Node _ (Unknown _) _) = undefined  -- Unknown should never appear in message tree
+
 
 runInsertTests :: IO Counts
 runInsertTests = runTestTT allTests
@@ -75,8 +89,10 @@ lmg n = LogMessage Info n ""
 
 --- Exercise 3
 
+
 build :: [LogMessage] -> MessageTree
 build = foldr insert Leaf
+
 
 runBuildTests :: IO Counts
 runBuildTests = runTestTT allTests
@@ -94,12 +110,13 @@ runBuildTests = runTestTT allTests
                  , ([lmg 1, lmg 3, lmg 2],
                     Node (Node Leaf (lmg 1) Leaf) (lmg 2) (Node Leaf (lmg 3) Leaf)) ]     -- 3 elements, all right side
 
-
 --- Exercise 4
+
 
 inOrder :: MessageTree -> [LogMessage]
 inOrder Leaf = []
-inOrder (Node lt m rt) = inOrder lt ++ [m] ++ inOrder rt
+inOrder (Node leftT lm rightT) = inOrder leftT ++ [lm] ++ inOrder rightT
+
 
 runInOrderTests :: IO Counts
 runInOrderTests = runTestTT allTests
@@ -119,16 +136,18 @@ runInOrderTests = runTestTT allTests
 
 --- Exercise 5
 
-whatWentWrong :: [LogMessage] -> [String]
-whatWentWrong = map messageGetter . filter onlySevereErrors . inOrder . build
-  where
-    onlySevereErrors :: LogMessage -> Bool
-    onlySevereErrors (LogMessage (Error n) _ _) = n >= 50
-    onlySevereErrors _                          = False
 
-    messageGetter :: LogMessage -> String
-    messageGetter (LogMessage _ _ m) = m
-    messageGetter _                  = undefined
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong = map getMessage . filter isSevere . inOrder . build
+-- whatWentWrong = map (\(LogMessage _ _ s) -> s) . filter isSevere . inOrder . build
+  where
+    isSevere :: LogMessage -> Bool
+    isSevere (LogMessage (Error severity) _ _) = severity >= 50
+    isSevere _ = False
+
+    getMessage :: LogMessage -> String
+    getMessage (LogMessage _ _ m) = m
+    getMessage _ = undefined
 
 runWhatWentWrongTests :: IO Counts
 runWhatWentWrongTests = runTestTT allTests

@@ -49,10 +49,35 @@ myButLast5 xs =
 
 
 myButLast6 :: [a] -> a
-myButLast6 = last . init
+myButLast6 xs
+  | length xs < 2 = undefined
+  | length xs == 2 = head xs
+  | otherwise = myButLast6 $ tail xs
+
 
 myButLast7 :: [a] -> a
-myButLast7 = head . tail . reverse
+myButLast7 xs = case (length xs) of
+  0 -> undefined
+  1 -> undefined
+  2 -> head xs
+  _ -> myButLast7 $ tail xs
+
+
+myButLast8 :: [a] -> a
+myButLast8 xs = case (length xs) of
+  0 -> undefined
+  1 -> undefined
+  _ -> last $ init xs
+
+
+--lacks error handling
+myButLast9 :: [a] -> a
+myButLast9 = last . init
+
+
+--lacks error handling
+myButLast10 :: [a] -> a
+myButLast10 = head . tail . reverse
         
 
 --------------------------------------------------
@@ -72,7 +97,17 @@ handlesCharList f = TestCase (assertEqual "handle Char list"
     (f "xyz"))
 
 testableMethods :: [[a] -> a]
-testableMethods = [myButLast1, myButLast2, myButLast3, myButLast4, myButLast5, myButLast6, myButLast7]
+testableMethods = [ myButLast1
+                  , myButLast2
+                  , myButLast3
+                  , myButLast4
+                  , myButLast5
+                  , myButLast6
+                  , myButLast7
+                  , myButLast8
+                  , myButLast9
+                  , myButLast10
+                  ]
 
 tests :: Test
 tests = TestList (map handlesNumList testableMethods ++ 

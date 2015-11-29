@@ -42,7 +42,20 @@ myLast5 xs =
 
 
 myLast6 :: [a] -> a
-myLast6 = last
+myLast6 xs
+  | length xs == 0 = undefined
+  | length xs == 1 = head xs
+  | otherwise = myLast6 $ tail xs
+
+
+--doesn't handle empty lists
+myLast7 :: [a] -> a
+myLast7  = head . reverse
+
+
+--doesn't handle empty lists
+myLast8 :: [a] -> a
+myLast8 = last
 
 
 --------------------------------------------------
@@ -64,7 +77,15 @@ handlesCharLists f = TestCase (assertEqual "handles Char list,"
 
 
 testableMethods :: [[a] -> a]
-testableMethods = [myLast1, myLast2, myLast3, myLast4, myLast5, myLast6]
+testableMethods = [ myLast1
+                  , myLast2
+                  , myLast3
+                  , myLast4
+                  , myLast5
+                  , myLast6
+                  , myLast7
+                  , myLast8
+                  ]
 
 tests :: Test
 tests = TestList (map handlesNumberLists testableMethods ++ 

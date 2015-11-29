@@ -46,9 +46,9 @@ doubleEveryOtherFromRight :: [Integer] -> [Integer]
 doubleEveryOtherFromRight  = reverse . doubleIfEvenIndex . reverse
   where doubleIfEvenIndex :: [Integer] -> [Integer]
         doubleIfEvenIndex = zipWith ($) (cycle [id,(*2)]) --- !!!
-{-      doubleIfEvenIndex = map (\(a,b) -> if isEven a then 2*b else b) . zip [1,2..]
+{-        doubleIfEvenIndex = map (\(a,b) -> if isEven a then 2*b else b) . zip [1,2..]
         where isEven :: Integer -> Bool
-              isEven x = rem x 2 == 0 -}
+              isEven x = rem x 2 == 0-}
 
 doubleEveryOtherTests :: [Test]
 doubleEveryOtherTests = [ "doubleEveryOtherFromRight [8,7,6,5]" ~:
