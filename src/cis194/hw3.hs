@@ -13,6 +13,7 @@ skips ls = reverse (foldl' (skipper ls) [] [1..(length ls)])
     skipper :: [a] -> [[a]] -> Int -> [[a]]
     skipper xs acc n = (last . transpose . chunksOf n $ xs) : acc
 
+
 runSkipsTests :: IO Counts
 runSkipsTests = runTestTT allTests
   where
