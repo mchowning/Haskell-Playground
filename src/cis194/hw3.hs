@@ -8,10 +8,10 @@ import Test.HUnit
 
 skips :: [a] -> [[a]]
 skips [] = [[]]
-skips ls = reverse (foldl' (skipper ls) [] [1..(length ls)])
+skips ls = foldr (skipper ls) [] [1..(length ls)]
   where
-    skipper :: [a] -> [[a]] -> Int -> [[a]]
-    skipper xs acc n = (last . transpose . chunksOf n $ xs) : acc
+    skipper :: [a] -> Int -> [[a]] -> [[a]]
+    skipper xs n acc = (last . transpose . chunksOf n $ xs) : acc
 
 
 runSkipsTests :: IO Counts
