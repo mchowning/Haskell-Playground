@@ -1,5 +1,7 @@
 {-#OPTIONS_GHC -Wall -Werror #-}
 
+module Hw3a where
+
 import Data.List
 import Data.List.Split
 import Test.HUnit
